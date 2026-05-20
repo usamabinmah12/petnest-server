@@ -7,7 +7,7 @@ const port = 5000;
 
 app.use(cors());
 app.use(express.json()); 
-
+const { ObjectId } = require("mongodb");
 const uri = "mongodb+srv://petnest:CBKpifrvVXPT0E8d@cluster0.wfpggc0.mongodb.net/?appName=Cluster0";
 
 const client = new MongoClient(uri, {
@@ -29,7 +29,15 @@ async function run() {
       const data = await petsCollection.find().toArray();
       res.json(data);
     });
+    app.get("/pets/:id", async (req, res) => {
+        const id = req.params.id;
 
+        const pet = await petsCollection.findOne({
+            _id: new ObjectId(id),
+         });
+
+    res.json(pet);
+  });
     app.post("/pets", async (req, res) => {
       const pet = req.body;
 
