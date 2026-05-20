@@ -29,6 +29,15 @@ async function run() {
       const data = await petsCollection.find().toArray();
       res.json(data);
     });
+    app.get("/dashboard/my-pets", async (req, res) => {
+  const email = req.query.email;
+
+  const query = email ? { ownerEmail: email } : {};
+
+  const result = await petsCollection.find(query).toArray();
+
+  res.json(result);
+});
     app.get("/pets/:id", async (req, res) => {
         const id = req.params.id;
 
@@ -38,6 +47,18 @@ async function run() {
 
     res.json(pet);
   });
+  app.put("/update/:id", async (req, res) => {
+  const id = req.params.id;
+  const updatedData = req.body;
+
+
+  const result = await petsCollection.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: updatedData }
+  );
+
+  res.json(result);
+});
     app.post("/pets", async (req, res) => {
       const pet = req.body;
 
