@@ -35,8 +35,12 @@ async function run() {
     app.get(
   "/pets/:id",
   (req, res, next) => {
-    const header = req?.headers?.authorization
+    const header = req?.headers.authorization
     console.log(header, "header")
+    if(!header) return;
+
+    const token = header.split(" ")[1];
+
     next()
   },
   async (req, res) => {
