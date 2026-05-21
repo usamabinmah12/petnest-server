@@ -2,11 +2,14 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const { createRemoteJWKSet, jwtVerify } = require("jose-cjs");
 app.use(express.json());
 require("dotenv").config();
 const port = process.env.PORT;
 app.use(cors());
-
+const JWKS = createRemoteJWKSet(
+  new URL("http://localhost:3000/api/auth/jwks")
+)
 const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri, {
   serverApi: {
@@ -32,7 +35,7 @@ async function run() {
         res.status(500).json({ error: error.message });
       }
     });
-
+    
     app.post("/pets", async (req, res) => {
       try {
         const petData = req.body;
@@ -64,15 +67,38 @@ async function run() {
         });
       }
     });
+    const verifyToken = async(req , res , next) => {
+      const header = req?.headers.authorization
+      if(!header) {
+        return res.status(401).json({
+          message : "Unauthorized"
+        });
+      }
+      const token = header.split(" ")[1];
+      if(!token) {
+         return res.status(401).json({
+          message : "Unauthorized"
+        });
+      }
+      try {
+        const {payload} = await jwtVerify(token , JWKS)
+        console.log("payload" ,);
+        next()
+      } catch (error) {
+        return res.status(401).json({
+          message : "Forbidden"
+        });
+      }
+      
+
+        // console.log(token, "token")
+
+
+        
+    }
     app.get(
       "/pets/:id",
-      (req, res, next) => {
-        const header = req?.headers.authorization
-        console.log(header, "header")
-
-
-        next()
-      },
+      verifyToken,
       async (req, res) => {
         try {
           const id = req.params.id;
