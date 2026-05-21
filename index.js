@@ -32,18 +32,31 @@ async function run() {
         res.status(500).json({ error: error.message });
       }
     });
-    app.get("/pets/:id", async (req, res) => {
-      try {
-        const id = req.params.id;
-        const pet = await petsCollection.findOne({ _id: new ObjectId(id) });
-        if (!pet) {
-          return res.status(404).json({ error: "Pet not found" });
-        }
-        res.json(pet);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+    app.get(
+  "/pets/:id",
+  (req, res, next) => {
+    const header = req?.headers?.authorization
+    console.log(header, "header")
+    next()
+  },
+  async (req, res) => {
+    try {
+      const id = req.params.id;
+
+      const pet = await petsCollection.findOne({
+        _id: new ObjectId(id),
+      });
+
+      if (!pet) {
+        return res.status(404).json({ error: "Pet not found" });
       }
-    });
+
+      res.json(pet);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
 
     app.put("/update/:id", async (req, res) => {
       try {
