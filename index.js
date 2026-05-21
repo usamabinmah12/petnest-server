@@ -32,6 +32,16 @@ async function run() {
         res.status(500).json({ error: error.message });
       }
     });
+
+    app.post("/pets", async (req, res) => {
+      try {
+        const petData = req.body;
+        const result = await petsCollection.insertOne(petData);
+        res.json(result);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
     app.get("/dashboard/my-pets", async (req, res) => {
       try {
         const email = req.query.email?.toLowerCase().trim();
@@ -136,6 +146,18 @@ async function run() {
       } catch (error) {
         console.error(error);
         res.status(500).send({ success: false, error: error.message });
+      }
+    });
+
+    app.delete("/pets/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const result = await petsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.json(result);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
       }
     });
 
