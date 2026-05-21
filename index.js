@@ -2,12 +2,12 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-
-const port = 5000;
-app.use(cors());
 app.use(express.json());
+require("dotenv").config();
+const port = process.env.PORT;
+app.use(cors());
 
-const uri = "mongodb+srv://petnest:CBKpifrvVXPT0E8d@cluster0.wfpggc0.mongodb.net/?appName=Cluster0";
+const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -37,9 +37,9 @@ async function run() {
   (req, res, next) => {
     const header = req?.headers.authorization
     console.log(header, "header")
-    if(!header) return;
+    //  if(!header) return;
 
-    const token = header.split(" ")[1];
+    // const token = header.split(" ")[1];
 
     next()
   },
