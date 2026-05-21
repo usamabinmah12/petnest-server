@@ -1,15 +1,13 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const port = 5000;
-
 app.use(cors());
-app.use(express.json()); 
-const { ObjectId } = require("mongodb");
-const uri = "mongodb+srv://petnest:CBKpifrvVXPT0E8d@cluster0.wfpggc0.mongodb.net/?appName=Cluster0";
+app.use(express.json());
 
+const uri = "mongodb+srv://petnest:CBKpifrvVXPT0E8d@cluster0.wfpggc0.mongodb.net/?appName=Cluster0";
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -21,64 +19,79 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-
-    const db = client.db("petnest");
-    const petsCollection = db.collection("pets"); 
+    console.log("MongoDB connected successfully");
+     const db = client.db("petnest");
+    const petsCollection = db.collection("pets");
+    const adoptionRequestsCollection = db.collection("adoption_requests");
 
     app.get("/pets", async (req, res) => {
-      const data = await petsCollection.find().toArray();
-      res.json(data);
+      try {
+        const data = await petsCollection.find().toArray();
+        res.json(data);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
     });
-    app.get("/dashboard/my-pets", async (req, res) => {
-  const email = req.query.email;
-
-  const query = email ? { ownerEmail: email } : {};
-
-  const result = await petsCollection.find(query).toArray();
-
-  res.json(result);
-});
     app.get("/pets/:id", async (req, res) => {
+      try {
         const id = req.params.id;
-
-        const pet = await petsCollection.findOne({
-            _id: new ObjectId(id),
-         });
-
-    res.json(pet);
-  });
-  app.put("/update/:id", async (req, res) => {
-  const id = req.params.id;
-  const updatedData = req.body;
-
-
-  const result = await petsCollection.updateOne(
-    { _id: new ObjectId(id) },
-    { $set: updatedData }
-  );
-
-  res.json(result);
-});
-    app.post("/pets", async (req, res) => {
-      const pet = req.body;
-
-      const result = await petsCollection.insertOne(pet);
-
-      res.json(result);
+        const pet = await petsCollection.findOne({ _id: new ObjectId(id) });
+        if (!pet) {
+          return res.status(404).json({ error: "Pet not found" });
+        }
+        res.json(pet);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
     });
 
-    console.log("MongoDB connected successfully");
+    app.put("/update/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updatedData = req.body;
+        
+        console.log("Updating pet:", id);
+        console.log("Update data:", updatedData);
+        
+        const result = await petsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updatedData }
+        );
+        
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ success: false, error: "Pet not found" });
+        }
+        
+        console.log("Update result:", result);
+        res.json({ success: true, data: result });
+      } catch (error) {
+        console.error("Update error:", error);
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    app.post("/api/adoption-requests", async (req, res) => {
+      try {
+        const adoptionRequest = req.body;
+        adoptionRequest.createdAt = new Date();
+        const result = await adoptionRequestsCollection.insertOne(adoptionRequest);
+        res.json({ success: true, data: result });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    app.get("/", (req, res) => {
+      res.send("Bismillahir Rahmanir Rahim");
+    });
+
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+
   } catch (error) {
-    console.error(error);
+    console.error("MongoDB connection error:", error);
   }
 }
 
 run();
-
-app.get("/", (req, res) => {
-  res.send("Bismillahir Rahmanir Rahim");
-});
-
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`);
-});
