@@ -8,7 +8,7 @@ require("dotenv").config();
 const port = process.env.PORT;
 app.use(cors());
 const JWKS = createRemoteJWKSet(
-  new URL("http://localhost:3000/api/auth/jwks")
+  new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
 )
 const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri, {
@@ -21,7 +21,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     console.log("MongoDB connected successfully");
     const db = client.db("petnest");
     const petsCollection = db.collection("pets");
@@ -82,7 +82,7 @@ async function run() {
       }
       try {
         const {payload} = await jwtVerify(token , JWKS)
-        console.log("payload" ,);
+        console.log("payload" , payload);
         next()
       } catch (error) {
         return res.status(401).json({
@@ -91,7 +91,6 @@ async function run() {
       }
       
 
-        // console.log(token, "token")
 
 
         
